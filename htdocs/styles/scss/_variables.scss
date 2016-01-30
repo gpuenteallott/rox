@@ -32,7 +32,7 @@ $gray-light:                #818a91 !default;
 $gray-lighter:              #eceeef !default;
 $gray-lightest:             #f7f7f9 !default;
 
-$brand-primary:             #f37000 !default;
+$brand-primary:             #0275d8 !default;
 $brand-success:             #5cb85c !default;
 $brand-info:                #5bc0de !default;
 $brand-warning:             #f0ad4e !default;
@@ -57,46 +57,46 @@ $enable-grid-classes:       true !default;
 // Control the default styling of most Bootstrap elements by modifying these
 // variables. Mostly focused on spacing.
 
-$spacer:                     1rem !default;
-$spacer-x:                   $spacer !default;
-$spacer-y:                   $spacer !default;
+$spacer:   1rem !default;
+$spacer-x: $spacer !default;
+$spacer-y: $spacer !default;
 $spacers: (
   0: (
-    x:   0,
-    y:   0
+    x: 0,
+    y: 0
   ),
   1: (
-    x:   $spacer-x,
-    y:   $spacer-y
+    x: $spacer-x,
+    y: $spacer-y
   ),
   2: (
-    x:   ($spacer-x * 1.5),
-    y:   ($spacer-y * 1.5)
+    x: ($spacer-x * 1.5),
+    y: ($spacer-y * 1.5)
   ),
   3: (
-    x:   ($spacer-x * 3),
-    y:   ($spacer-y * 3)
+    x: ($spacer-x * 3),
+    y: ($spacer-y * 3)
   )
 ) !default;
-$border-width:               1px !default;
+$border-width: 1px !default;
 
 
 // Body
 //
 // Settings for the `<body>` element.
 
-$body-bg:                    #fff !default;
-$body-color:                 $gray-dark !default;
+$body-bg:    #fff !default;
+$body-color: $gray-dark !default;
 
 
 // Links
 //
 // Style anchor elements.
 
-$link-color:                 #0275d8 !default; // Use original bootstrap primary for links instead of BW orange
-$link-decoration:            none !default;
-$link-hover-color:           darken($link-color, 15%) !default;
-$link-hover-decoration:      none !default;
+$link-color:            $brand-primary !default;
+$link-decoration:       none !default;
+$link-hover-color:      darken($link-color, 15%) !default;
+$link-hover-decoration: underline !default;
 
 
 // Grid breakpoints
@@ -105,15 +105,10 @@ $link-hover-decoration:      none !default;
 // adapting to different screen sizes, for use in media queries.
 
 $grid-breakpoints: (
-  // Extra small screen / phone
   xs: 0,
-  // Small screen / phone
   sm: 544px,
-  // Medium screen / tablet
   md: 768px,
-  // Large screen / desktop
   lg: 992px,
-  // Extra large screen / wide desktop
   xl: 1200px
 ) !default;
 
@@ -134,73 +129,73 @@ $container-max-widths: (
 //
 // Set the number of columns and specify the width of the gutters.
 
-$grid-columns:               12 !default;
-$grid-gutter-width:          1.875rem !default; // 30px
+$grid-columns:      12 !default;
+$grid-gutter-width: 1.875rem !default; // 30px
 
 
 // Typography
 //
 // Font, line-height, and color for body text, headings, and more.
 
-$font-family-sans-serif:     LatoWeb, Arial, sans-serif;
-$font-family-serif:          Georgia, "Times New Roman", Times, serif !default;
-$font-family-monospace:      Menlo, Monaco, Consolas, "Courier New", monospace !default;
-$font-family-base:           $font-family-sans-serif !default;
-
+$font-family-sans-serif: "Helvetica Neue", Helvetica, Arial, sans-serif !default;
+$font-family-serif:      Georgia, "Times New Roman", Times, serif !default;
+$font-family-monospace:  Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !default;
+$font-family-base:       $font-family-sans-serif !default;
 
 // Pixel value used to responsively scale all typography. Applied to the `<html>` element.
-$font-size-root:             16px !default;
+$font-size-root: 16px !default;
 
-$font-size-base:             1rem !default;
-$font-size-lg:               1.25rem !default;
-$font-size-sm:               .875rem !default;
-$font-size-xs:               .75rem !default;
+$font-size-base: 1rem !default;
+$font-size-lg:   1.25rem !default;
+$font-size-sm:   .875rem !default;
+$font-size-xs:   .75rem !default;
 
-$font-size-h1:               2.5rem !default;
-$font-size-h2:               2rem !default;
-$font-size-h3:               1.75rem !default;
-$font-size-h4:               1.5rem !default;
-$font-size-h5:               1.25rem !default;
-$font-size-h6:               1rem !default;
+$font-size-h1: 2.5rem !default;
+$font-size-h2: 2rem !default;
+$font-size-h3: 1.75rem !default;
+$font-size-h4: 1.5rem !default;
+$font-size-h5: 1.25rem !default;
+$font-size-h6: 1rem !default;
 
-$display1-size:               6rem !default;
-$display2-size:               5.5rem !default;
-$display3-size:               4.5rem !default;
-$display4-size:               3.5rem !default;
+$display1-size: 6rem !default;
+$display2-size: 5.5rem !default;
+$display3-size: 4.5rem !default;
+$display4-size: 3.5rem !default;
 
-$display1-weight:             300 !default;
-$display2-weight:             300 !default;
-$display3-weight:             300 !default;
-$display4-weight:             300 !default;
+$display1-weight: 300 !default;
+$display2-weight: 300 !default;
+$display3-weight: 300 !default;
+$display4-weight: 300 !default;
 
-$line-height:                1.5 !default;
+$line-height: 1.5 !default;
 
-$headings-margin-bottom:     ($spacer / 2) !default;
-$headings-font-family:       "Signika-Regular", LatoWeb, sans-serif;
-$headings-font-weight:       500 !default;
-$headings-line-height:       1.1 !default;
-$headings-color:             inherit !default;
+$headings-margin-bottom: ($spacer / 2) !default;
+$headings-font-family:   inherit !default;
+$headings-font-weight:   500 !default;
+$headings-line-height:   1.1 !default;
+$headings-color:         inherit !default;
 
-$lead-font-size:             1.25rem !default;
-$lead-font-weight:           300 !default;
+$lead-font-size:   1.25rem !default;
+$lead-font-weight: 300 !default;
 
-$text-muted:                  $gray-light !default;
+$text-muted: $gray-light !default;
 
-$abbr-border-color:           $gray-light !default;
+$abbr-border-color: $gray-light !default;
 
-$blockquote-small-color:      $gray-light !default;
-$blockquote-font-size:        ($font-size-base * 1.25) !default;
-$blockquote-border-color:     $gray-lighter !default;
+$blockquote-small-color:  $gray-light !default;
+$blockquote-font-size:    ($font-size-base * 1.25) !default;
+$blockquote-border-color: $gray-lighter !default;
+$blockquote-border-width: .25rem !default;
 
-$hr-border-color:             rgba(0,0,0,.1) !default;
-$hr-border-width:             $border-width !default;
+$hr-border-color: rgba(0,0,0,.1) !default;
+$hr-border-width: $border-width !default;
 
-$dt-font-weight:              bold !default;
+$dt-font-weight: bold !default;
 
 $kbd-box-shadow:         inset 0 -.1rem 0 rgba(0,0,0,.25) !default;
-$nested-kbd-font-weight:      bold !default;
+$nested-kbd-font-weight: bold !default;
 
-$list-inline-padding:         5px !default;
+$list-inline-padding: 5px !default;
 
 
 // Components
@@ -249,7 +244,7 @@ $btn-active-box-shadow:          inset 0 3px 5px rgba(0,0,0,.125) !default;
 
 $btn-primary-color:              #fff !default;
 $btn-primary-bg:                 $brand-primary !default;
-$btn-primary-border:             rgba(255,255,255,.5) !default;
+$btn-primary-border:             $btn-primary-bg !default;
 
 $btn-secondary-color:            $gray-dark !default;
 $btn-secondary-bg:               #fff !default;
@@ -408,15 +403,15 @@ $form-icon-danger: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My
 //
 // Dropdown menu container and contents.
 
-$dropdown-bg:                    transparentize(#000, 0.3);
-$dropdown-border-color:          rgba(255,255,255,.15) !default;
+$dropdown-bg:                    #fff !default;
+$dropdown-border-color:          rgba(0,0,0,.15) !default;
 $dropdown-border-width:          $border-width !default;
 $dropdown-divider-bg:            #e5e5e5 !default;
 $dropdown-box-shadow:            0 6px 12px rgba(0,0,0,.175) !default;
 
-$dropdown-link-color:            #fff !default;
-$dropdown-link-hover-color:      $brand-primary !default;
-$dropdown-link-hover-bg:         #000 !default;
+$dropdown-link-color:            $gray-dark !default;
+$dropdown-link-hover-color:      darken($gray-dark, 5%) !default;
+$dropdown-link-hover-bg:         #f5f5f5 !default;
 
 $dropdown-link-active-color:     $component-active-color !default;
 $dropdown-link-active-bg:        $component-active-bg !default;
@@ -444,14 +439,14 @@ $zindex-modal:             1050 !default;
 
 // Navbar
 
-$navbar-border-radius:              0 !default;
-$navbar-padding-x:                  0 !default;
-$navbar-padding-y:                  0 !default;
+$navbar-border-radius:              $border-radius !default;
+$navbar-padding-x:                  $spacer !default;
+$navbar-padding-y:                  ($spacer / 2) !default;
 
-$navbar-dark-color:                white !default;
-$navbar-dark-hover-color:          rgba(0,0,0,.7) !default;
-$navbar-dark-active-color:         black !default;
-$navbar-dark-disabled-color:       grey !default;
+$navbar-dark-color:                 rgba(255,255,255,.5) !default;
+$navbar-dark-hover-color:           rgba(255,255,255,.75) !default;
+$navbar-dark-active-color:          rgba(255,255,255,1) !default;
+$navbar-dark-disabled-color:        rgba(255,255,255,.25) !default;
 
 $navbar-light-color:                rgba(0,0,0,.3) !default;
 $navbar-light-hover-color:          rgba(0,0,0,.6) !default;
@@ -486,44 +481,29 @@ $nav-pills-active-link-bg:    $component-active-bg !default;
 // Pagination
 
 $pagination-padding-x:                .75rem !default;
-$pagination-padding-y:                $btn-padding-y !default;
+$pagination-padding-y:                .5rem !default;
 $pagination-padding-x-sm:             .75rem !default;
 $pagination-padding-y-sm:             .275rem !default;
 $pagination-padding-x-lg:             1.5rem !default;
 $pagination-padding-y-lg:             .75rem !default;
 
 
-$pagination-color:                     $brand-primary !default;
-$pagination-bg:                        #ddd !default;
+$pagination-color:                     $link-color !default;
+$pagination-bg:                        #fff !default;
 $pagination-border-width:              $border-width !default;
-$pagination-border-color:              #fff !default;
+$pagination-border-color:              #ddd !default;
 
 $pagination-hover-color:               $link-hover-color !default;
-$pagination-hover-bg:                  $brand-primary !default;
-$pagination-hover-border:              #fff !default;
+$pagination-hover-bg:                  $gray-lighter !default;
+$pagination-hover-border:              #ddd !default;
 
 $pagination-active-color:              #fff !default;
 $pagination-active-bg:                 $brand-primary !default;
-$pagination-active-border:             #fff !default;
+$pagination-active-border:             $brand-primary !default;
 
-$pagination-disabled-color:            #ccc !default;
+$pagination-disabled-color:            $gray-light !default;
 $pagination-disabled-bg:               #fff !default;
-$pagination-disabled-border:           #fff !default;
-
-
-// Pager
-
-$pager-bg:                             $pagination-bg !default;
-$pager-border-width:                   $border-width !default;
-$pager-border-color:                   $pagination-border-color !default;
-$pager-border-radius:                  15px !default;
-
-$pager-hover-bg:                       $pagination-hover-bg !default;
-
-$pager-active-bg:                      $pagination-active-bg !default;
-$pager-active-color:                   $pagination-active-color !default;
-
-$pager-disabled-color:                 $pagination-disabled-color !default;
+$pagination-disabled-border:           #ddd !default;
 
 
 // Jumbotron
@@ -666,10 +646,11 @@ $alert-danger-bg:             $state-danger-bg !default;
 $alert-danger-text:           $state-danger-text !default;
 $alert-danger-border:         $state-danger-border !default;
 
+
 // Progress bars
 
 $progress-bg:                 #eee !default;
-$progress-bar-color:          #f37000 !default;
+$progress-bar-color:          #0074d9 !default;
 $progress-border-radius:      $border-radius !default;
 $progress-box-shadow:         inset 0 .1rem .1rem rgba(0,0,0,.1) !default;
 
@@ -679,6 +660,7 @@ $progress-bar-warning-bg:     $brand-warning !default;
 $progress-bar-danger-bg:      $brand-danger !default;
 $progress-bar-info-bg:        $brand-info !default;
 
+
 // List group
 
 $list-group-bg:                 #fff !default;
@@ -686,10 +668,10 @@ $list-group-border-color:       #ddd !default;
 $list-group-border-width:       $border-width !default;
 $list-group-border-radius:      $border-radius !default;
 
-$list-group-hover-bg:           $component-active-bg !default;
+$list-group-hover-bg:           #f5f5f5 !default;
 $list-group-active-color:       $component-active-color !default;
 $list-group-active-bg:          $component-active-bg !default;
-$list-group-active-border:      $list-group-border-color !default;
+$list-group-active-border:      $list-group-active-bg !default;
 $list-group-active-text-color:  lighten($list-group-active-bg, 40%) !default;
 
 $list-group-disabled-color:      $gray-light !default;
@@ -697,7 +679,7 @@ $list-group-disabled-bg:         $gray-lighter !default;
 $list-group-disabled-text-color: $list-group-disabled-color !default;
 
 $list-group-link-color:         #555 !default;
-$list-group-link-hover-color:   #fff !default;
+$list-group-link-hover-color:   $list-group-link-color !default;
 $list-group-link-heading-color: #333 !default;
 
 
@@ -764,9 +746,3 @@ $pre-bg:                      #f7f7f9 !default;
 $pre-color:                   $gray-dark !default;
 $pre-border-color:            #ccc !default;
 $pre-scrollable-max-height:   340px !default;
-
-$custom-form-bg-color:                    #ddd !default;
-$custom-form-bg-color-disabled:           #eee !default;
-$custom-form-description-color-disabled:  #767676 !default;
-
-

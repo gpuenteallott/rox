@@ -58,12 +58,12 @@ class MOD_sphinx
 
     private function _getSphinxClient()
     {
-        require_once(SCRIPT_BASE . 'lib/sphinx-2.1.9/sphinxapi.php');
+        require_once(SCRIPT_BASE . 'lib/sphinx-2.2.10/sphinxapi.php');
         $sphinxClient = new SphinxClient();
         $sphinxClient->SetServer ( '127.0.0.1', 9312 );
         $sphinxClient->SetConnectTimeout ( 20 );
         $sphinxClient->SetArrayResult ( true );
-        $sphinxClient->SetWeights ( array ( 1000, 1 ) );
+        $sphinxClient->SetIndexWeights ( array ( 'geonames' => 1000 ) );
         $sphinxClient->SetMatchMode ( SPH_MATCH_EXTENDED );
         return $sphinxClient;
     }
@@ -95,17 +95,15 @@ class MOD_sphinx
         $sphinxClient->SetSortMode( SPH_SORT_EXPR, "@weight");
         return $sphinxClient;
     }
-
     /**
      * wrapper for lazy loading and instantiating a Sphinx client object
      *
-     * @access public
-     * @return object
+     * @return SphinxClient
      */
     public function getSphinxForums()
     {
         $sphinxClient = $this->_getSphinxClient();
-        $sphinxClient->SetLimits(0, 15);
+        $sphinxClient->SetLimits(0, 300);
         return $sphinxClient;
     }
 }

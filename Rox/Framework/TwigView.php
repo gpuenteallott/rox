@@ -3,6 +3,12 @@
 namespace Rox\Framework;
 
 use Rox\Models\Message;
+use Symfony\Bridge\Twig\Extension\FormExtension;
+use Symfony\Bridge\Twig\Form\TwigRenderer;
+use Symfony\Bridge\Twig\Form\TwigRendererEngine;
+use Symfony\Component\Form\Form;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\Routing\Router;
 use Symfony\Component\Translation\Translator;
 use Symfony\Component\Translation\MessageSelector;
@@ -19,38 +25,43 @@ use \Illuminate\Database\Capsule\Manager as Capsule;
 class TwigView extends AbstractBasePage {
 
     protected $_loader;
+    private $_forms = array();
+    private $_container;
     private $_environment;
     private $_template;
-    private $_parameters;
+    private $_parameters = array();
     protected $_words;
     protected $_translator;
     private $_stylesheets = array(
-         'bewelcome.css?1',
-//        'bootstrap.css',
-//        'select2.css',
-//        'select2-bootstrap.css',
-//          'minimal/screen/custom/index.css?3',
-//          'minimal/screen/custom/font-awesome.min.css',
-//          'minimal/screen/custom/font-awesome-ie7.min.css',
+        'bewelcome.css',
+        '/script/tether-1.1.1/css/tether.min.css'
     );
 
     private $_lateScriptFiles = array(
+        'thether-1.1.1/js/tether.js',
         'bootstrap/bootstrap.min.js',
-        'common/initialize.js',
-        'select2/select2.min.js',
         'bootstrap-autohidingnavbar/jquery.bootstrap-autohidingnavbar.js',
+        'common/initialize.js',
     );
 
     private $_earlyScriptFiles = array(
+        'jquery/jquery-2.1.4.min.js',
+        'select2/select2.js',
         'common/common.js?1',
-        'jquery-1.11.2/jquery-1.11.2.min.js',
     );
 
-    public function __construct(Router $router) {
+    /**
+     * TwigView constructor.
+     * @param Router $router
+     * @param bool $container
+     */
+    public function __construct(Router $router, $container = true) {
+        $this->_container = $container;
         $this->_loader = new Twig_Loader_Filesystem();
         $this->addNamespace('base');
         $this->addNamespace('start');
         $this->addNamespace('macros');
+        $this->addNamespace('forms');
 
 
         $this->_environment = new Twig_Environment(
@@ -62,7 +73,9 @@ class TwigView extends AbstractBasePage {
             )
         );
         $this->_words = $this->getWords();
-
+        if (!isset($_SESSION['lang'])) {
+            $_SESSION['lang'] = 'en';
+        }
         $this->_translator = new Translator($_SESSION['lang'], new MessageSelector());
         if ($_SESSION['lang'] <> 'en') {
             $this->_translator->setFallbackLocales(array('en'));
@@ -71,6 +84,7 @@ class TwigView extends AbstractBasePage {
         $this->_translator->addResource('database', null, $_SESSION['lang']);
         $this->_environment->addExtension(new TranslationExtension($this->_translator));
         $this->_environment->addExtension(new RoxTwigExtension());
+
         if ($router != null) {
             $this->_environment->addExtension(new RoutingExtension($router->getGenerator()));
         }
@@ -88,10 +102,42 @@ class TwigView extends AbstractBasePage {
         $this->_loader->addPath($path, $namespace);
     }
 
+    public function initializeFormComponent($inlineForms = false) {
+        $formTemplate = ($inlineForms) ? 'inline' : '';
+        // Setting up the form template
+        $defaultFormTheme = 'form_div_layout.html.twig';
+
+        $appVariableReflection = new \ReflectionClass(
+            '\Symfony\Bridge\Twig\AppVariable'
+        );
+        $vendorTwigBridgeDir = dirname(
+            $appVariableReflection->getFileName()
+        );
+        $this->_loader->addPath(
+            $vendorTwigBridgeDir.'/Resources/views/Form'
+        );
+
+        $formEngine = new TwigRendererEngine(array($defaultFormTheme));
+        $formEngine->setEnvironment($this->_environment);
+        // add the FormExtension to Twig
+        $this->_environment->addExtension(
+            new FormExtension(new TwigRenderer($formEngine))
+        );
+
+    }
+    /**
+     * @param Form|FormInterface $form
+     * @param string $name
+     */
+    public function addForm(Form $form, $name = 'form') {
+        $this->_forms[$name] = $form->createView();
+    }
+
     private function _getDefaults() {
         $roxModel = new RoxModelBase();
         $member = $roxModel->getLoggedInMember();
         $loggedIn = ($member !== false);
+        $teams = [];
         $messageCount = 0;
         if ($loggedIn) {
             $messageCount =
@@ -99,13 +145,78 @@ class TwigView extends AbstractBasePage {
                     ->where('WhenFirstRead', '0000-00-00 00:00')
                     ->where('Status', 'Sent')
                     ->count();
+            // Check if member is part of volunteer teams
+            $R = \MOD_right::get();
+            $allTeams = [
+                [
+                    'Words',
+                    'AdminWord',
+                    'admin/word'
+                ],
+                [
+                    'Flags',
+                    'AdminFlags',
+                    'admin/flags'
+                ],
+                [
+                    'Rights',
+                    'AdminRights',
+                    'admin/rights'
+                ],
+                [
+                    'Logs',
+                    'AdminLogs',
+                    'bw/admin/adminlogs.php'
+                ],
+                [
+                    'Comments',
+                    'AdminComments',
+                    'bw/admin/admincomments.php'
+                ],
+                [
+                    'NewMembersBeWelcome',
+                    'AdminNewMembers',
+                    'admin/newmembers',
+                ],
+                [
+                    'MassMail',
+                    'AdminMassMail',
+                    'admin/massmail'
+                ],
+                [
+                    'Treasurer',
+                    'AdminTreasurer',
+                    'admin/treasurer'
+                ],
+                [
+                    'FAQ',
+                    'AdminFAQ',
+                    'bw/faq.php'
+                ],
+                [
+                    'SqlForVolunteers',
+                    'AdminSqlForVolunteers',
+                    'bw/admin/adminquery.php'
+                ],
+            ];
+            foreach($allTeams as $team) {
+                if ($R->hasRight($team[0])) {
+                    $cls = new \stdClass();
+                    $cls->link = $team[2];
+                    $cls->trans = $team[1];
+                    $teams[] = $cls;
+                }
+            }
         }
+
         return array(
+            'container' => $this->_container,
             'logged_in' => $loggedIn,
             'messages' => $messageCount,
-            'username' => $member->Username,
+            'username' => ($loggedIn ? $member->Username : ''),
             'meta.robots' => 'ALL',
-            'title' => 'BeWelcome'
+            'title' => 'BeWelcome',
+            'teams' => $teams
         );
     }
 
@@ -117,18 +228,18 @@ class TwigView extends AbstractBasePage {
             $lang->NativeName = $language->Name;
             $lang->TranslatedName = $this->_words->getSilent($language->WordCode);
             $lang->ShortCode = $language->ShortCode;
-            $langarr[] = $lang;
+            $langarr[$language->ShortCode] = $lang;
         }
-        $ascending = function($a, $b) {
-            if ($a == $b) {
+        $defaultLanguage = $langarr[isset($_SESSION['lang']) ? $_SESSION['lang'] : 'en'];
+        usort($langarr, function($a, $b) {
+            if ($a->TranslatedName == $b->TranslatedName) {
                 return 0;
             }
             return (strtolower($a->TranslatedName) < strToLower($b->TranslatedName)) ? -1 : 1;
-        };
-        usort($langarr, $ascending);
+        });
 
         return array(
-            'language' => $_SESSION['lang'],
+            'language' => $defaultLanguage,
             'languages' => $langarr
         );
     }
@@ -137,17 +248,17 @@ class TwigView extends AbstractBasePage {
         $this->_stylesheets[] = $stylesheet;
     }
 
-    protected function addEarlyJavascriptFile($scriptFile, $name = false) {
-        if ($name) {
-            $this->_earlyScriptFiles[$name] = $scriptFile;
+    protected function addEarlyJavascriptFile($scriptFile, $prepend = false) {
+        if ($prepend) {
+            array_unshift($this->_earlyScriptFiles, $scriptFile);
         } else {
             $this->_earlyScriptFiles[] = $scriptFile;
         }
     }
 
-    protected function addLateJavascriptFile($scriptFile, $name = false) {
-        if ($name) {
-            $this->_lateScriptFiles[$name] = $scriptFile;
+    protected function addLateJavascriptFile($scriptFile, $prepend = false) {
+        if ($prepend) {
+            array_unshift($this->_lateScriptFiles, $scriptFile);
         } else {
             $this->_lateScriptFiles[] = $scriptFile;
         }
@@ -178,7 +289,7 @@ class TwigView extends AbstractBasePage {
         } else {
             $this->_template = $template;
         }
-        $this->setParameters($parameters);
+        $this->addParameters($parameters);
     }
 
     /**
@@ -186,16 +297,8 @@ class TwigView extends AbstractBasePage {
      *
      * @param array $parameters
      */
-    public function setParameters($parameters) {
-        $finalParameters = array_merge(
-            $parameters,
-            $this->_getStylesheets(),
-            $this->_getLanguages(),
-            $this->_getEarlyJavascriptFiles(),
-            $this->_getLateJavascriptFiles(),
-            $this->_getDefaults()
-        );
-        $this->_parameters = $finalParameters;
+    public function addParameters($parameters) {
+        $this->_parameters = array_merge($this->_parameters, $parameters);
     }
 
     /**
@@ -204,6 +307,15 @@ class TwigView extends AbstractBasePage {
      * @return string
      */
     public function render() {
-        return $this->_environment->render($this->_template, $this->_parameters);
+        $finalParameters = array_merge(
+            $this->_parameters,
+            $this->_forms,
+            $this->_getStylesheets(),
+            $this->_getLanguages(),
+            $this->_getEarlyJavascriptFiles(),
+            $this->_getLateJavascriptFiles(),
+            $this->_getDefaults()
+        );
+        return $this->_environment->render($this->_template, $finalParameters);
     }
 }

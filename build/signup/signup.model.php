@@ -38,6 +38,7 @@ class SignupModel extends RoxModelBase
      * TODO: should get a more specific name - refactoring needed!
      */
     // Allow usernames with up to 20 chars for new signup. Allow ., - and _. Don't allow consecutive special chars.
+    const PATTERN_USERNAME = '[a-z](?!.*[-_.][-_.])[a-z0-9-._]{2,18}[a-z0-9]';
     const HANDLE_PREGEXP = '/^[a-z](?!.*[-_.][-_.])[a-z0-9-._]{2,18}[a-z0-9]$/i';
 
     /**
@@ -122,31 +123,30 @@ WHERE `Email` = \'' . $this->dao->escape(strtolower($email)).'\'';
      */
     public function takeCareForNonUniqueEmailAddress($email)
     {
-        $email = str_replace("@", "%40", $email);
+        $email = $this->dao->escape($email);
+        // Thanks to the messed up database we need to check more than just the DB column
+        // First try with the 'real' email address and a plain entry in AdminCryptedValue
+        // Second try with the 'real' email address and an 'XML' entry in AdminCryptedValue
+        // And finally check for a 'URL encoded' email address only happens with an 'XML' entry
         $query = "
-SELECT `Username`, members.`Status`, members.`id` AS `idMember`
-FROM " . PVars::getObj('syshcvol')->Crypted . "`cryptedfields`
-RIGHT JOIN `members` ON members.`id` = cryptedfields.`IdMember`";
+            SELECT `Username`, members.`Status`, members.`id` AS `idMember`
+            FROM " . PVars::getObj('syshcvol')->Crypted . "`cryptedfields`
+            RIGHT JOIN `members` ON members.`id` = cryptedfields.`IdMember`";
         if (isset($_SESSION['IdMember'])) {
-        $query .= '
-AND members.`id`!=' . $_SESSION['IdMember']
-; }
-        $query .= "
-    WHERE `AdminCryptedValue` = '<admincrypted>" . $email . "</admincrypted>'";
-
+            $query .= ' AND members.`id`!=' . $_SESSION['IdMember'];
+        }
+        $query .= " WHERE (`AdminCryptedValue` = '" . $email . "'";
+        $query .= " OR `AdminCryptedValue` = '<admincrypted>" . $email . "</admincrypted>'";
+        $email = str_replace("@", "%40", $email);
+        $query .= " OR `AdminCryptedValue` = '<admincrypted>" . $email . "</admincrypted>')";
         $s = $this->dao->query($query);
-        if ($s->numRows() == 0) {
-						if (!empty($email)) MOD_log::get()->write("Unique email checking done successfuly","Signup") ;
+        $found = ($s->numRows() != 0);
+        if (!$found) {
+			if (!empty($email)) MOD_log::get()->write("Unique email checking done successfuly","Signup") ;
             return '';
         }
-        $text = 'Unique email checking : These users use the same e-mail address: ';
-		while ($row = $s->fetch(PDB::FETCH_OBJ)) {
-		    $text .= $row->Username .
-		        '(id: ' . $row->idMember . ', status: ' . $row->Status . '), ';
-		}
-		$text = substr($text, 0, -2);
-
-		MOD_log::get()->write($text." (With New Signup !)", "Signup");
+        $text = "Non unique email address: " . $email . " (With New Signup !)";
+		MOD_log::get()->write($text, "Signup");
 		return $text;
     } // end takeCareForNonUniqueEmailAddress
 
@@ -312,8 +312,6 @@ FROM `user` WHERE
             // TODO: BW 2007-08-19: $_SYSHCVOL['EmailDomainName']
             define('DOMAIN_MESSAGE_ID', 'bewelcome.org');    // TODO: config
             $View->registerMail($vars, $id,$idTB);
-            $View->signupTeamMail($vars);
-            // PPostHandler::clearVars();
             return PVars::getObj('env')->baseuri.'signup/register/finish';
         } else {
             PPostHandler::setCallback($c, __CLASS__, __FUNCTION__);
@@ -383,29 +381,33 @@ WHERE `ShortCode` = \'' . $_SESSION['lang'] . '\'';
         // ********************************************************************
         // members
         // ********************************************************************
-        $query = '
-INSERT INTO `members`
-(
-	`Username`,
-	`IdCity`,
-	`Gender`,
-	`HideGender`,
-	`created`,
-	`BirthDate`,
-	`HideBirthDate`
-)
-VALUES
-(
-	\'' . $vars['username'] . '\',
-	' . $vars['geonameid'] . ',
-	\'' . $vars['gender'] . '\',
-	\'' . $vars['genderhidden'] . '\',
-	now(),
-	\'' . $vars['iso_date'] . '\',
-	\'' . $vars['agehidden'] . '\'
-)';
-        $members = $this->dao->query($query);
-        $memberID = $members->insertId();
+        $query = "
+            INSERT INTO `members`
+            (
+                `Username`,
+                `IdCity`,
+                `Latitude`,
+                `Longitude`,
+                `Gender`,
+                `HideGender`,
+                `created`,
+                `BirthDate`,
+                `HideBirthDate`
+            )
+            VALUES
+            ( ?, ?, ?, ?, ?, ?, NOW(), ?, ? );";
+        $stmt = $this->dao->prepare($query);
+        $stmt->bindParam(0, $vars['username']);
+        $stmt->bindParam(1, $vars['location-geoname-id']);
+        $stmt->bindParam(2, $vars['location-latitude']);
+        $stmt->bindParam(3, $vars['location-longitude']);
+        $stmt->bindParam(4, $vars['gender']);
+        $stmt->bindParam(5, $vars['genderhidden']);
+        $stmt->bindParam(6, $vars['iso_date']);
+        $stmt->bindParam(7, $vars['agehidden']);
+
+        $res = $stmt->execute();
+        $memberID = $stmt->insertId();
 
         $memberEntity = new Member($memberID);
         $vars['password'] = $memberEntity->preparePassword($vars['password']);
@@ -473,7 +475,7 @@ INSERT INTO addresses
 VALUES
 (
 	' . $memberID . ',
-	' . $vars['geonameid'] . ',
+	' . $vars['location-geoname-id'] . ',
     0,
 	0,
 	0,
@@ -489,7 +491,7 @@ VALUES
         // location (where Philipp would put it)
         // ********************************************************************
 		$geomodel = new GeoModel();
-		if(!$geomodel->addGeonameId($vars['geonameid'],'member_primary')) {
+		if(!$geomodel->addGeonameId($vars['location-geoname-id'],'member_primary')) {
 		    $vars['errors'] = array('geoinserterror');
             return false;
         }
@@ -497,7 +499,7 @@ VALUES
 
         // Only for bugtesting and backwards compatibility the geo-views in our DB
         $CityName = "not found in cities view";
-        $geonameId = intval($vars['geonameid']);
+        $geonameId = intval($vars['location-geoname-id']);
         $sqry = "
             SELECT
                 name
@@ -596,8 +598,8 @@ VALUES
      * Check form values of registration form,
      * do some cautious corrections
      *
-     * @param unknown_type $vars
-     * @return unknown
+     * @param $vars
+     * @return array
      */
 	public function checkRegistrationForm(&$vars)
     {
@@ -605,11 +607,10 @@ VALUES
 
 
         // geonameid
-        if (empty($vars['geonameid']) || empty($vars['countryname'])) {
+        if (empty($vars['location-geoname-id'])) {
             $errors[] = 'SignupErrorProvideLocation';
-            unset($vars['geonameid']);
+            unset($vars['location-geoname-id']);
         }
-
 
         // username
         if (!isset($vars['username']) ||
@@ -640,6 +641,12 @@ VALUES
                 strcmp($vars['password'], $vars['passwordcheck']) != 0
         ) {
             $errors[] = 'SignupErrorPasswordCheck';
+        }
+
+        // accommodation
+        if (empty($vars['accommodation']) || ($vars['accommodation']!='anytime' && $vars['accommodation']!='dependonrequest'
+                && $vars['accommodation']!='neverask')) {
+            $errors[] = 'SignupErrorProvideAccommodation';
         }
 
         if (!empty($vars['sweet'])) {
@@ -682,7 +689,7 @@ VALUES
 
         // terms
         if (empty($vars['terms']) || !$vars['terms']) {
-            $errors[] = 'SignupMustacceptTerms';    // TODO: looks like a wrong case in "Accept"
+            $errors[] = 'SignupMustAcceptTerms';
         }
 
         return $errors;

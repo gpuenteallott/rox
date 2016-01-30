@@ -1,0 +1,175 @@
+.welcomeback{
+  background-color: #eee;
+  border: 3px solid #fff;
+  border-top: 0;
+  box-shadow: 0 0 1px #888;
+}
+
+.hoststatus{
+  position:relative;
+  top: -16px;
+  right: -32px;
+}
+
+.dashbox{
+  overflow: hidden;
+  box-shadow: 0 -1px 0 #888;
+  height: 26em;
+  background: #fff;
+  border: 1px solid #888;
+  border-top: 1px solid transparent;
+  border-radius: 0 .25rem .25rem .25rem;}
+
+.readunread{
+  background-color: #FFF;
+  padding: 0.2em;
+  text-align: center;
+}
+.scrollcontent{
+//  position:relative;
+//  height: 18em;
+//  overflow:hidden;
+}
+
+.chevplace{
+  position: relative;
+  right: 0;
+  top: 25px;
+}
+
+.shadow{
+  box-shadow: 0 0 2px #888;
+}
+
+.dashentrytext{
+  margin: 0.2em;
+}
+
+.framed {
+  border-radius:2px;
+}
+
+.alert-info {
+  border: 1px solid #8A8A8A;
+  border-radius: 0.15rem;
+}
+
+.verticalmiddle{
+  vertical-align: middle !important;
+}
+
+.activityinfo{
+  padding-left: .25rem;
+  min-width: 15;
+}
+
+.dateandtitle{
+  width: 55%; // fix for Chrome
+  min-width: 55%;
+  max-width: 60%;
+  position: relative;
+}
+
+.activitytitle{
+  position: absolute;
+  width: 100%;
+}
+
+.card-4 {
+  width: 33.33% !important;
+}
+
+.card-3 {
+  width: 25% !important;;
+}
+
+.card-2 {
+  width: 16.67% !important;;
+}
+
+.dashentry{
+  height: 100%;
+  float: left;
+  padding: $spacer-y $spacer-x !important;
+}
+
+.scrollcontent .row:nth-of-type(odd){
+  background-color: $table-bg-accent;
+}
+
+.scrollcontent .row:nth-of-type(even){
+  background-color: #fff;
+}
+
+.avatarpadding{
+  padding: 10px 0;
+}
+
+.welcomeavatar{
+  height: 50px;
+}
+
+@include media-breakpoint-up(md){
+
+  .welcomeback {
+    height: 7em;
+  }
+
+  .dashentry{
+    width: calc(100% - 70px);
+  }
+
+  .dashentry p{
+    @include vertical-align();
+  }
+
+  .scrollcontent .row {
+    height: 70px;
+  }
+
+}
+
+/* Occurs when viewed on medium to very small screens only */
+
+@include media-breakpoint-down(md) {
+
+  .welcomeback {
+    height: auto;
+  }
+
+  .verticalalign {
+    transform: translateY(0%) !important;
+  }
+
+  .dashentry{
+    float: none;
+    padding: 1rem 0 0 0 !important;
+  }
+
+  .text-truncate{
+    line-height: 1;
+  }
+
+  .avatarpadding{
+    padding: 5px 0;
+  }
+
+}
+
+/* Occurs when viewed on very small screens only */
+@include media-breakpoint-down(xs) {
+
+  .dashentry{
+    width: calc(100% - 20px);
+
+  }
+
+  .card {
+    width: 100% !important;
+  }
+
+  .card-deck .card{
+    display: block;
+  }
+
+}

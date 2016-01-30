@@ -147,8 +147,8 @@ class Member extends RoxEntityBase
           "memberslanguageslevel.Level AS Level,WordCode FROM memberslanguageslevel,languages " .
           "WHERE memberslanguageslevel.IdMember=" . $this->id .
           " AND memberslanguageslevel.IdLanguage=languages.id AND memberslanguageslevel.Level != 'DontKnow' order by memberslanguageslevel.Level asc";
-        $qry = mysql_query($str);
-        while ($rr = mysql_fetch_object($qry)) {
+        $qry = $this->dao->query($str);
+        while ($rr = $qry->fetch(PDB::FETCH_OBJ)) {
             //if (isset($rr->Level)) $rr->Level = ("LanguageLevel_".$rr->Level);
             array_push($TLanguages, $rr);
         }
@@ -960,6 +960,7 @@ WHERE
                     } else {
                         // Suppress display in template
                         $regionName = '';
+                        $regionCode = '';
                     }
 
                     // Set country name and code
@@ -983,6 +984,7 @@ WHERE
                     $streetName = $errorMessage;
                     $zip = $errorMessage;
                     $regionName = $errorMessage;
+                    $regionCode = $errorMessage;
                     $countryName = $errorMessage;
                     $countryCode = $errorMessage;
                 }
@@ -995,6 +997,7 @@ WHERE
                 $streetName = $errorMessage;
                 $zip = $errorMessage;
                 $regionName = $errorMessage;
+                $regionCode = $errorMessage;
                 $countryName = $errorMessage;
                 $countryCode = $errorMessage;
             }
@@ -1515,11 +1518,8 @@ SELECT id FROM membersphotos WHERE IdMember = ".$this->id. " ORDER BY SortOrder 
     // sql_get_set returns in an array the possible set values of the colum of table name
     public function sql_get_set($table, $column)
     {
-        $sql = "SHOW COLUMNS FROM $table LIKE '$column'";
-        if (!($ret = mysql_query($sql)))
-            die("Error: Could not show columns $column");
-
-        $line = mysql_fetch_assoc($ret);
+        $s = $this->dao->query("SHOW COLUMNS FROM $table LIKE '$column'");
+        $line = $s->fetch(PDB::FETCH_ASSOC);
         $set = $line['Type'];
         $set = substr($set, 5, strlen($set) - 7); // Remove "set(" at start and ");" at end
         return preg_split("/','/", $set); // Split into and array
@@ -1529,11 +1529,8 @@ SELECT id FROM membersphotos WHERE IdMember = ".$this->id. " ORDER BY SortOrder 
     // sql_get_enum returns in an array the possible set values of the colum of table name
     public function sql_get_enum($table, $column)
     {
-        $sql = "SHOW COLUMNS FROM $table LIKE '$column'";
-        if (!($ret = mysql_query($sql)))
-            die("Error: Could not show columns $column");
-
-        $line = mysql_fetch_assoc($ret);
+        $s = $this->dao->query("SHOW COLUMNS FROM $table LIKE '$column'");
+        $line = $s->fetch(PDB::FETCH_ASSOC);
         $set = $line['Type'];
         $set = substr($set, 6, strlen($set) - 8); // Remove "enum(" at start and ");" at end
         return preg_split("/','/", $set); // Split into and array
@@ -1678,12 +1675,14 @@ SELECT id FROM membersphotos WHERE IdMember = ".$this->id. " ORDER BY SortOrder 
 
         if (!$this->old_rights)
         {
-            $query = "SELECT * FROM rightsvolunteers AS rv, rights AS r WHERE rv.IdMember = {$this->getPKValue()} AND rv.IdRight = r.id";
+            $query = "SELECT * FROM rightsvolunteers AS rv, rights AS r WHERE rv.IdMember = {$this->getPKValue()} AND rv.IdRight = r.id AND rv.Level > 0";
             $result = $this->dao->query($query);
             $return = array();
             while ($row = $result->fetch(PDB::FETCH_ASSOC))
             {
-                $return[$row['Name']] = $row;
+                if ($row['Level'] > 0) {
+                    $return[$row['Name']] = $row;
+                }
             }
             $this->old_rights = $return;
         }

@@ -8,13 +8,15 @@ class PageWithHTML extends AbstractBasePage
     // Add or increment query string if a JS file changes to make sure browsers
     // reload the file (e.g. "?1" -> "?2")
     private $_early_scriptfiles = array(
-        '/script/main.js?9',
-        '/script/common/common.js?1',
-        '/script/bootstrap/bootstrap.js?1',
+        '/jquery/jquery-2.1.4.min.js',
+        '/main.js?9',
+        '/common/common.js?1',
+        '/select2/select2.min.js'
     );
 
     private $_late_scriptfiles = array(
-        '/script/bootstrap/bootstrap.js',
+        '/bootstrap/bootstrap.js',
+        '/common/initialize.js?1',
     );
 
     public function render() {
@@ -108,7 +110,7 @@ class PageWithHTML extends AbstractBasePage
      */
     protected function addEarlyLoadScriptFile($file)
     {
-        $this->_early_scriptfiles[] = 'script/' . $file;
+        $this->_early_scriptfiles[] = $file;
     }
 
     /**
@@ -121,7 +123,7 @@ class PageWithHTML extends AbstractBasePage
      */
     protected function addLateLoadScriptFile($file)
     {
-        $this->_late_scriptfiles[] = 'script/' . $file;
+        $this->_late_scriptfiles[] = $file;
     }
 
     protected function getPageTitle() {
@@ -258,7 +260,7 @@ class PageWithHTML extends AbstractBasePage
         if (!$scriptfiles = $this->getScriptfiles()) {
             // no stylesheets
         } else foreach($scriptfiles as $url) {
-            ?><script type="text/javascript" src="<?=$url ?>"></script>
+            ?><script type="text/javascript" src="script/<?=$url ?>"></script>
             <?php
         }
     }

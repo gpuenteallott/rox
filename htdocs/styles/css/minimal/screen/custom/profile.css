@@ -1,28 +1,9 @@
 @media all
 {
 
-#main {padding: 0 2em;}
-
-
-#col1{
-    float: left;
-    width: 18%;
-}
-#col3{
-    margin: 0 0 0 18%;
-}
-
-
-#col1 #col1_content{
-    padding: 0 2em 0 0;
-    margin: 0;
-}
-
-
-#col3_content{
-    padding: 1em 0 3em 3em;
-    margin: 0;
-    background:transparent url(../../images/bg_col3.png) no-repeat scroll 0 0;
+#main {
+    padding: 0 2em;
+    font-size: 66%;
 }
 
 #col3_content h1 {
@@ -300,4 +281,6 @@ span.profile-edit-link a {
 /* additional styles for member note form */
 
 .yform label {padding-bottom: 0.12em;}
+
+#sweet {border: 0; padding: 0; margin: 0; width:0; height: 0; display: inline}
 }

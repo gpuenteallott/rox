@@ -31,7 +31,7 @@ $purifier = MOD_htmlpure::getBasicHtmlPurifier();
                         if ($group_id == $suggestionsGroupId) {
                             $showNewTopicButton = false;
                         }
-                    echo $Forums->showExternalGroupThreads($group_id, false, $showNewTopicButton); ?>
+                    echo $Forums->showExternalGroupThreads($group_id, $this->isGroupMember(), false, $showNewTopicButton); ?>
                 </div> <!-- clearfix -->
             </div> <!-- subcl -->
         </div> <!-- c62l -->
@@ -147,8 +147,7 @@ $purifier = MOD_htmlpure::getBasicHtmlPurifier();
             <a href="groups/<?php echo $group_data->getPKValue() ?>">
                 <img class="framed_relatedgroup float_left" alt="Group" src="<?php echo $img_link; ?>"/>
             </a>
-            <div class="userinfo"><span class="small">
-            <h4><a href="groups/<?php echo $group_data->getPKValue() ?>"><?php echo htmlspecialchars($group_data->Name, ENT_QUOTES) ?></a></h4>
+            <div class="userinfo"><a href="groups/<?php echo $group_data->getPKValue() ?>"><?php echo htmlspecialchars($group_data->Name, ENT_QUOTES) ?></a><br />
                 <?php echo $words->get('GroupsMemberCount');?>: <?php echo $group_data->getMemberCount(); ?><br />
                 <?php echo $words->get('GroupsNewMembers');?>: <?php echo count($group_data->getNewMembers()) ; ?><br />
             </span></div> <!-- userinfo -->

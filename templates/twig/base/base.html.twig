@@ -1,6 +1,6 @@
 {% import '@macros/macros.twig' as macros %}
 <!DOCTYPE html>
-<html lang="{{ language }}">
+<html lang="{{ language.ShortCode }}">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -23,15 +23,14 @@
     <![endif]-->
 </head>
 <body>
-    {% if logged_in %}
-        {% include '@base/navigation.html.twig' %}
-    {%  else %}
-        {% include '@start/navigation.html.twig' %}
-    {% endif %}
-    {% block content %}{% endblock %}
-    {% if logged_in %}
-        {% include '@base/footer.html.twig' %}
-    {% endif %}
+    <div class="navandcontent">
+        {% include '@base/menu.html.twig' %}
+        <noscript><h1>Please activate Javascript for bewelcome.org<small>Without it some function won't work.</small></h1></noscript>
+        <div class="container">
+        {% block content %}{% endblock %}
+            </div>
+    </div>
+    {% include '@base/footer.html.twig' %}
     {% include '@base/scriptfiles.html.twig' with {scriptFiles : lateScriptFiles} %}
 </body>
 </html>

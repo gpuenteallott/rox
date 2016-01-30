@@ -16,8 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, see <http://www.gnu.org/licenses/> or 
-write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, 
+along with this program; if not, see <http://www.gnu.org/licenses/> or
+write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
 
 */
@@ -29,17 +29,17 @@ Boston, MA  02111-1307, USA.
  */
 class Rox extends PAppModel {
     protected $dao;
-    
+
     // supported languages for translations; basis for flags in the footer
 	private $_langs = array();
-    
+
 	/**
 	 * @see /htdocs/bw/lib/lang.php
 	 */
     public function __construct()
     {
         parent::__construct();
-        
+
         // TODO: it is fun to offer the members the language of the volunteers, i.e. 'prog',
         // so I don't make any exceptions here; but we miss the flag - the BV flag ;-)
         // TODO: is it consensus we use "WelcomeToSignup" as the decision maker for languages?
@@ -50,21 +50,21 @@ WHERE code = \'WelcomeToSignup\'';
         $result = $this->dao->query($query);
         while ($row = $result->fetch(PDB::FETCH_OBJ)) {
             $this->_langs[] = $row->ShortCode;
-        }   
+        }
 
 		global $i_am_the_mailbot,$_SYSHCVOL;
 		if ('auto' == PVars::getObj('db')->dbupdate &&
 			!(isset($_SYSHCVOL['NODBAUTOUPDATE']) ? $_SYSHCVOL['NODBAUTOUPDATE'] : true) &&
 			!(isset($i_am_the_mailbot) ? $i_am_the_mailbot : false)		) {
-			
+
 			require_once "../././htdocs/bw/lib/dbupdate.php";
 			DBUpdateCheck();
 //			die("<br />Please refresh again now, database has been updated") ;
 		}
-	
+
     }// end of __construct
-    
-    
+
+
     /**
      * @param string $lang short identifier (2 or 3 characters) for language
      * @return boolean if language is supported true, otherwise false
@@ -107,7 +107,7 @@ WHERE `ShortCode` in (' . $l . ')
         $query = '
 SELECT COUNT(*) AS n
 FROM `messages`
-WHERE `IdReceiver` = ' . $_idUser . '
+WHERE `IdReceiver` = ' . $this->dao->escape($_idUser) . '
 AND `Status` = \'Sent\'
 AND (NOT FIND_IN_SET(\'receiverdeleted\', `DeleteRequest`))
 AND `WhenFirstRead` = 0';
@@ -155,12 +155,12 @@ AND `WhenFirstRead` = 0';
         $record = $result->fetch(PDB::FETCH_OBJ);
         return $record->cnt;
     }
-    
+
     /**
      * Returns the number of people due to be checked to problems or what.
      * The number depends on the scope of the person logged on.
      *
-     * @return integer indicating the number of people wiche need to be accepted 
+     * @return integer indicating the number of people wiche need to be accepted
      * in a Group if the current member has right to accept them
      */
     public function getNumberPersonsToAcceptInGroup($GroupScope)
@@ -230,18 +230,18 @@ SQL;
         while ($row = $s->fetch(PDB::FETCH_OBJ)) {
             $result[] = $row;
         }
-        return $result;		
+        return $result;
 	}
-	
+
 // retrieve the number of members for each country
 	public function getMembersPerCountry() {
             $query = <<<SQL
         SELECT g2.name AS countryname,
           COUNT(*) AS cnt
-        FROM members, addresses, geonames_cache AS g1, geonames_cache AS g2 WHERE members.Status="Active" 
+        FROM members, addresses, geonames_cache AS g1, geonames_cache AS g2 WHERE members.Status="Active"
 		AND members.id = addresses.IdMember
         AND addresses.rank = 0
-        AND addresses.IdCity = g1.geonameid 
+        AND addresses.IdCity = g1.geonameid
 		AND g1.parentCountryId = g2.geonameid GROUP BY g2.geonameid  ORDER BY cnt DESC
 SQL;
             $s = $this->dao->query($query);
@@ -258,13 +258,13 @@ SQL;
                     if (isset($result["Others"])) {
                         $result["Others"] = $result["Others"] + $row->cnt;
                     }
-                    else { 
+                    else {
                         $result["Others"] = $row->cnt;
                     }
                 }
                 $i++;
             }
-            return $result;		
+            return $result;
 	}
 
 
@@ -272,9 +272,9 @@ SQL;
 
 
 	public function getLastLoginRank() {
-		$query = 'SELECT TIMESTAMPDIFF(DAY,members.LastLogin,NOW()) AS logindiff, COUNT(*) AS cnt FROM members 
+		$query = 'SELECT TIMESTAMPDIFF(DAY,members.LastLogin,NOW()) AS logindiff, COUNT(*) AS cnt FROM members
 		WHERE TIMESTAMPDIFF(DAY,members.LastLogin,NOW()) >= 0
-		GROUP BY logindiff 
+		GROUP BY logindiff
 		ORDER BY logindiff ASC';
 		$s = $this->dao->query($query);
 		if (!$s) {
@@ -284,13 +284,13 @@ SQL;
 		while ($row = $s->fetch(PDB::FETCH_OBJ)) {
                     $result[$row->logindiff] = $row->cnt;
 		}
-		return $result;		
+		return $result;
 	}
-	
+
 	public function getLastLoginRankGrouped() {
-		$query = 'select TIMESTAMPDIFF(DAY,members.LastLogin,NOW()) AS logindiff, COUNT(*) AS cnt FROM members 
+		$query = 'select TIMESTAMPDIFF(DAY,members.LastLogin,NOW()) AS logindiff, COUNT(*) AS cnt FROM members
 		WHERE TIMESTAMPDIFF(DAY,members.LastLogin,NOW()) >= 0
-		GROUP BY logindiff 
+		GROUP BY logindiff
 		ORDER BY logindiff ASC';
 		$s = $this->dao->query($query);
 		if (!$s) {
@@ -303,10 +303,10 @@ SQL;
 		$result['1-2 weeks'] = 0;
 		$result['2-4 weeks'] = 0;
 		$result['1-3 months'] = 0;
-		$result['3-6 months'] = 0;		
-		$result['longer'] = 0;		
-		
-		
+		$result['3-6 months'] = 0;
+		$result['longer'] = 0;
+
+
 		while ($row = $s->fetch(PDB::FETCH_OBJ)) {
                     if ($row->logindiff==1) {
                         $result['1 day'] = $result['1 day'] + $row->cnt;
@@ -321,16 +321,16 @@ SQL;
                     } elseif ($row->logindiff<=182) {
                         $result['3-6 months'] = $result['3-6 months'] + $row->cnt;
                     } else {
-                        $result['longer'] =  $result['longer'] + $row->cnt;		
+                        $result['longer'] =  $result['longer'] + $row->cnt;
                     }
 		}
-		return $result;		
-	}	
+		return $result;
+	}
 
-	
+
 // retrieve the stats from db - all time weekly average
 	public function getStatsLogAll() {
-            $query = 'SELECT AVG(NbActiveMembers) AS NbActiveMembers,AVG(NbMessageSent) AS NbMessageSent,AVG(NbMessageRead) AS NbMessageRead,AVG(NbMemberWithOneTrust) AS NbMemberWithOneTrust,AVG(NbMemberWhoLoggedToday) AS NbMemberWhoLoggedToday,created,YEARWEEK(created) AS week  
+            $query = 'SELECT AVG(NbActiveMembers) AS NbActiveMembers,AVG(NbMessageSent) AS NbMessageSent,AVG(NbMessageRead) AS NbMessageRead,AVG(NbMemberWithOneTrust) AS NbMemberWithOneTrust,AVG(NbMemberWhoLoggedToday) AS NbMemberWhoLoggedToday,created,YEARWEEK(created) AS week
 		FROM stats
 		GROUP BY week ';
             $s = $this->dao->query($query);
@@ -341,12 +341,12 @@ SQL;
             while ($row = $s->fetch(PDB::FETCH_OBJ)) {
                 $result[] = $row;
             }
-            return $result;		
+            return $result;
 	}
-	
+
 // retrieve the stats from db - daily for last 2months
 	public function getStatsLog2Month() {
-		$query = 'select * 
+		$query = 'select *
 		FROM stats
 		ORDER BY id DESC
 		LIMIT 0,60';
@@ -359,22 +359,22 @@ SQL;
 			$result[] = $row;
 		}
 		$result = array_reverse($result);
-		return $result;		
-	}	
+		return $result;
+	}
 
 
     /**
      * Returns true if member belongs to group volunteer
      *
      */
-	 
+
     public function isVolunteer($_idUser)
     {
         $query = '
 SELECT *
 FROM membersgroups
 WHERE membersgroups.IdGroup = 17
-AND membersgroups.Status="In" 
+AND membersgroups.Status="In"
 AND membersgroups.IdMember='. $_idUser;
         $result = $this->dao->query($query);
 		$record = $result->fetch(PDB::FETCH_OBJ);
@@ -392,8 +392,8 @@ AND membersgroups.IdMember='. $_idUser;
     {
 // retrieve the last member
         $query = <<<SQL
-SELECT SQL_CACHE members.*, membersphotos.FilePath AS photo, membersphotos.id AS IdPhoto, g2.Name AS countryname, g1.Name AS cityname 
-FROM members, memberspublicprofiles, membersphotos, geonames_cache AS g1, geonames_cache AS g2, addresses 
+SELECT SQL_CACHE members.*, membersphotos.FilePath AS photo, membersphotos.id AS IdPhoto, g2.Name AS countryname, g1.Name AS cityname
+FROM members, memberspublicprofiles, membersphotos, geonames_cache AS g1, geonames_cache AS g2, addresses
 WHERE membersphotos.IdMember = members.id
 AND membersphotos.SortOrder = 0
 AND members.Status = "Active"
@@ -401,12 +401,12 @@ AND memberspublicprofiles.IdMember = members.id
 AND members.id = addresses.IdMember
 AND addresses.rank = 0
 AND addresses.IdCity = g1.geonameid
-AND g2.geonameid = g1.parentCountryId 
+AND g2.geonameid = g1.parentCountryId
 SQL;
         if ($sortOrder == 'random')
         $query .= '
 ORDER BY RAND()
-'; 
+';
         else
         $query .= '
 ORDER BY `members`.`id` DESC
@@ -424,11 +424,11 @@ LIMIT '.(int)$limit
         }
         return $members ;
     } // end of	getMembersStartpage
-    
+
     /**
      * Returns an array with the mist of X latest donations (all donation in case the current user has Treasurer rights)
      *
-     */    
+     */
 
     public function getDonations() {
         $TDonations = array();
@@ -446,19 +446,19 @@ LIMIT '.(int)$limit
         }
         return($TDonations);
     }
-    
+
     /**
      * Returns true if member belongs to group volunteer
      *
      */
-	 
+
     public function returnFromPayPal()
-    {    
-/*    
+    {
+/*
 //The donation returns an url as the following
 http://www.bewelcome.org/bw/donations2.php?action=done&tx=0ME24142PE152304A&st=Completed&amt=5.00&cc=EUR&cm=&item_number=&sig=hYUTlSOjBeJvNqfFqc%252fZbrBA4p6c%252fe6EErVp1w18eOBR96p6hzzenPysL%252bFVPZi8YEcONFovQmYn%252b6QF%252fBYoVhGMoaQJCxBQh%252bLAlC0TdgeScs1skk0%252bpY6SyoC%252fNCV1ou69zWRrhDrtsa4SUHibLD%252f1RwGg43iaZjPhB24I6lg%253d
 */
-         // save the first immediate return values 		
+         // save the first immediate return values
          $tx=$tx_token = $_GET['tx'];
          $payment_amount=$_GET['amt'] ;
          $payment_currency=$_GET['cc'] ;
@@ -472,7 +472,7 @@ http://www.bewelcome.org/bw/donations2.php?action=done&tx=0ME24142PE152304A&st=C
          }
          $req .= "&tx=$tx_token&at=$auth_token";
 
-/*			 
+/*
          foreach ($_POST as $key => $value) {
                  $value = trim(urlencode(stripslashes($value)));
                  echo "_POST[", $key,"]=",$value,"<br />";
@@ -491,16 +491,16 @@ http://www.bewelcome.org/bw/donations2.php?action=done&tx=0ME24142PE152304A&st=C
          // If possible, securely post back to paypal using HTTPS
          // Your PHP server will need to be SSL enabled
          // $fp = fsockopen ('ssl://www.paypal.com', 443, $errno, $errstr, 30);
-             
+
 
          if (!$fp) {
             MOD_log::get()->write("Failed to connect to paypal for return value while checking confirmation on paypal","donation") ;
             $error = "A problem occured while checking confirmation with paypal";
             return $error;
-         } 
+         }
          else {
              fputs ($fp, $header . $req); // sending the query to paypal
-             // read the body data 
+             // read the body data
              $res = '';
              $headerdone = false;
              while (!feof($fp)) { // while result not received
@@ -526,9 +526,9 @@ http://www.bewelcome.org/bw/donations2.php?action=done&tx=0ME24142PE152304A&st=C
                     }
                     $keyarray[urldecode($key)] = urldecode($val);
                 }
-                
+
                 $ItsOK=true ;
-                
+
                 $txn_id = $keyarray['txn_id'];
 
                 if ($payment_amount!=$keyarray['mc_gross']) { // If amount differs we will not continue
@@ -539,17 +539,17 @@ http://www.bewelcome.org/bw/donations2.php?action=done&tx=0ME24142PE152304A&st=C
                    $ItsOK=false ;
                    MOD_log::get()->write("Problem for \$payment_currency expected=".$payment_currency." return par paypal confirmation=".$keyarray['mc_currency'],"donation") ;
                 }
-                
+
                 if ($keyarray['txn_id']!=$tx) { // If control code differs we will not continue
                    $ItsOK=false ;
                    MOD_log::get()->write("Problem for txn_id expected=".$tx." return par paypal confirmation=".$keyarray['txn_id'],"donation") ;
                 }
-                
-                if (!$ItsOK) { 
+
+                if (!$ItsOK) {
                     $error = "We detected a problem while checking the success of your donation on paypal";
                     return $error;
                 }
-                
+
                 $IdMember=0 ; $IdCountry=0 ; // This values will remain if the user was not logged
                 if (isset($_SESSION["IdMember"])) {
                     $IdMember=$_SESSION["IdMember"] ;
@@ -563,7 +563,7 @@ AND addresses.rank = 0
 SQL;
                     $result = $this->dao->query($query);
             		$m = $result->fetch(PDB::FETCH_OBJ);
-                    $IdCountry=$m->IdCountry ; 
+                    $IdCountry=$m->IdCountry ;
                 }
 
                 $referencepaypal=  "ID #".$keyarray['txn_id']." payment_status=".$keyarray['payment_status'] ;
@@ -576,9 +576,9 @@ SQL;
                 else {
                    $payment_currency=$keyarray['mc_currency'] ;
                 }
-                
+
                 $receiver_email=$keyarray['payer_email'] ;
-                
+
                 // now test if this donation was allready registrated
                 $query = '
 SELECT *
@@ -587,13 +587,13 @@ WHERE IdMember='.$IdMember.'
 AND referencepaypal LIKE "%'.$referencepaypal.'%"';
                 $result = $this->dao->query($query);
         		$rr = $result->fetch(PDB::FETCH_OBJ);
-        
+
                 if (isset($rr->id)) { // If a previous version was already existing, it means a double signup
                     MOD_log::get()->write("Same Donation Submited several times for ".$keyarray['mc_gross'].$payment_currency." by ".$keyarray['first_name']." ".$keyarray['last_name']."/".$receiver_email." status=".$payment_status." [expected".$_SESSION["PaypalBW_key"]." received=".$tx."]","Donation") ;
                     $error = "Your donation is registrated only once , not need to submit twice ;-)";
                     return $error;
                 }
-        
+
                 $memo="" ;
                 if (isset($keyarray['memo'])) {
                    $memo=$keyarray['memo'] ;
@@ -614,5 +614,5 @@ VALUES
             return $error;
     	} // enf if fp
     }
-    
+
 }

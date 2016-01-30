@@ -7,33 +7,12 @@ start:
 home:
     path:     /home
     defaults:
-        _controller: "\\Rox\\Main\\Home\\HomeController::showAction"
+        _controller: "Rox\\Main\\Home\\HomeController::showAction"
 
-login:
+login_symfony:
     path:     /login_symfony
     defaults:
-        _controller: "Rox\\Login\\LoginController::checkCredentials"
-    schemes:  [https]
-
-feedback:
-    path:     /feedback
-    methods:  [GET]
-    defaults:
-        _controller: "\\Rox\\Main\\Home\\HomeController::showAction"
-
-avatar:
-    path:     /members/avatar/{username}/{size}
-    requirements:
-        username: "(?i:[a-z](?!.*[-_.][-_.])[a-z0-9-._]{2,18}[a-z0-9])"
-    defaults:
-        _controller: "\\MembersController::avatar"
-
-member:
-    path:     /members/{username}
-    requirements:
-        username: "(?i:[a-z](?!.*[-_.][-_.])[a-z0-9-._]{2,18}[a-z0-9])"
-    defaults:
-        _controller: "\\MembersController::index"
+        _controller: "\\Rox\\Login\\LoginController::checkCredentials"
 
 admin_logs_type:
     path:     /admin/logs/type/{type}/{currentPage}/{itemsPerPage}
@@ -68,8 +47,28 @@ admin_logs:
         currentPage: 1
         itemsPerPage: 20
 
+admin_queries:
+    path:     /admin/queries
+    methods: [GET, POST]
+    defaults:
+        _controller: "\\Rox\\Admin\\Queries\\QueriesController::showOverview"
+        currentPage: 1
+        itemsPerPage: 20
+
+admin_queries_fetch_parameters:
+    path:     /admin/queries/fetchparameters
+    methods: [GET]
+    defaults:
+        _controller: "\\Rox\\Admin\\Queries\\QueriesController::fetchParameterElements"
+
 mockups:
     path: /mockups/{mockup}
     defaults:
       _controller: "\\Rox\\Mockups\\MockupsController::showMockup"
+
+
+textsearch:
+    path: /search/members
+    defaults:
+      _controller: "\\Rox\\Search\\Members\\SearchMembersController::searchAction"
 

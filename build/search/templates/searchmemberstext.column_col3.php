@@ -20,7 +20,7 @@ $layoutbits = new MOD_layoutbits();
 // The whole page is in one form to be able to fill the fields with the correct content even
 // when switching between pages of the result
 ?>
-<div class="row"><!--  around form -->
+<div class="bw_row"><!--  around form -->
 <?php if (count($this->errors) > 0) :
     echo '<div class="error">';
     foreach ($this->errors as $error) :
@@ -89,18 +89,18 @@ endif; ?>
         <div class="advance-link">
         <?php if ($this->showAdvanced) { ?>
             <a name="search-simple"
-                href="search/members/text"><?php echo $words->getFormatted('SearchMembersSimple'); ?></a>
+                href="/search/members/text"><?php echo $words->getFormatted('SearchMembersSimple'); ?></a>
         <?php } else { ?>
             <img id="search-advanced-loading"
                  src="/styles/css/minimal/screen/custom/jquery-ui/smoothness/images/ui-anim_basic_16x16.gif" style="width:10px" alt="<?php echo $words->getSilent("SearchMembersAdvancedLoading"); ?>" />
             <a name="search-advanced"
-                href="search/members/text/advanced"><?php echo $words->getFormatted('SearchMembersAdvanced'); ?></a>
+                href="/search/members/text/advanced"><?php echo $words->getFormatted('SearchMembersAdvanced'); ?></a>
         <?php } ?>
     </div>
 </div>
 
-<div class="clearfix row">
-    <div class="row"><?php
+<div class="clearfix bw_row">
+    <div class="bw_row"><?php
         $numberOfItems = array('5', '10', '20', '50', '100');
         $select = '<select name="search-number-items">';
         foreach ($numberOfItems as $number) :
@@ -161,11 +161,11 @@ if ($this->membersResultsReturned) :
                 echo '<tr class="' . (($ii % 2) ? 'blank' : 'highlight') . '">';
                 echo '<td class="memberleft">';
                 echo '<div class="picture"><div>' . $layoutbits->PIC_75_75($member->Username) . '</div>';
-                echo '<div><a href="members/' . $member->Username . '" target="_blank">' . $member->Username . '</a></div>';
+                echo '<div><a href="/members/' . $member->Username . '" target="_blank">' . $member->Username . '</a></div>';
                 echo '</div>';
                 echo '</td><td class="memberright">';
                 echo '<div class="left">';
-                echo '<strong><a href="members/' . $member->Username . '" target="_blank">' . (empty($member->Name) ? $member->Username : $member->Name) . '</a></strong>';
+                echo '<strong><a href="/members/' . $member->Username . '" target="_blank">' . (empty($member->Name) ? $member->Username : $member->Name) . '</a></strong>';
                 if ($member->MessageCount) {
                     echo '<a href="messages/with/' . $member->Username . '"><img src="images/icons/comments.png" alt="'
                         . $words->getSilent('messages_allmessageswith', $member->Username)
@@ -234,7 +234,7 @@ if ($this->locationsResultsReturned) :
             $class = 'c33l';
             if ($i % 3 == 0) {
                 echo '
-                        <div class="subcolumns row">';
+                        <div class="subcolumns bw_row">';
             };
             if ($i % 3 == 2) {
                 $class = 'c33r';
@@ -268,7 +268,7 @@ if ($this->locationsResultsReturned) :
     foreach ($this->locations as $location) :
         $class = 'c33l';
         if ($i % 3 == 0) {
-            echo '<div class="subcolumns row">';
+            echo '<div class="subcolumns bw_row">';
         }
         if ($i % 3 == 2) {
             $class = 'c33r';

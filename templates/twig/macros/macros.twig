@@ -3,8 +3,42 @@
            value="{{ value|e }}" />
 {% endmacro %}
 
-{% macro submit(text) %}
-    <input class="form-control" type="submit" value="{{ text|trans }}" />
+{% macro submit(text, class = false) %}
+    <button class="form-control btn btn-primary{%  if class %}{{ class }}{% endif %}" type="submit">{{ text|trans }}</button>
+{% endmacro %}
+
+{% macro select(name, values, value, class) %}
+    {# Source: https://github.com/joomla/jissues/blob/master/templates/fields.twig #}
+    <select name="{{ name }}" {% if class %} class="{{ class }}"{% endif %}>
+        {% for key, name in values %}
+            <option value="{{ key }}"{% if value == key %} selected="selected"{% endif %}>{{ name }}</option>
+        {% endfor %}
+    </select>
+{% endmacro %}
+
+{% macro select2(name, class, placeholder, values, value, allowClear, noSearchBox, width) %}
+    <select name="{{ name }}" class="{% if class %}{{ class }} {% endif %}select2"
+            {% if placeholder %}data-placeholder="{{ placeholder }}"{% endif %}
+            {% if allowClear %}data-allow-clear="{{ allowClear }}"{% endif %}
+            {% if noSearchBox %}data-minimum-results-for-search="-1"{% endif %}
+            {% if width %}style="width: {{ width }}em;"{% endif %}>
+        {% for key, name in values %}
+            {% if key == -1 %}
+                <option></option>
+            {% else %}
+                <option value="{{ key }}"{% if value == key %} selected="selected"{% endif %}>{{ name }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+{% endmacro %}
+
+{% macro select2ajax(name, class, placeholder, value, text) %}
+    <select name="{{ name }}" class="{% if class %}{{ class }} {% endif %}" style="width: 100%"
+            {% if placeholder %}data-placeholder="{{ placeholder }}"{% endif %}
+        >
+
+        <option value="{{ value }}" selected="selected">{{ text }}</option>
+    </select>
 {% endmacro %}
 
 {% macro avatar(username, size, linked = false) %}
@@ -31,7 +65,7 @@
 {% endmacro %}
 
 {% macro memberlink(username) %}
-<a href="path('member', { username: username } ) }}">{{ username }}</a>
+<a href="members/{{ username }}">{{ username }}</a>
 {% endmacro %}
 
 {% macro pagination(currentPage, lastPage, route, routeParams) %}
@@ -99,4 +133,12 @@
             </nav>
         {% endif %}
     {% endspaceless %}
+{% endmacro %}
+
+{% macro link( route, type ) %}
+    {% set class = 'default' %}
+    {% if type == 'dropdown'  %}
+        {% set class = 'dropdown-item' %}
+    {% endif %}
+    <a class="{{ class }}" href="{{ path( route | lower ) }}">{{ route | trans }}</a>
 {% endmacro %}

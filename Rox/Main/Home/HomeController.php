@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
 */
 class HomeController extends \RoxControllerBase
 {
-
     /**
      * @RoxModelBase Rox
      */
@@ -42,7 +41,7 @@ class HomeController extends \RoxControllerBase
     }
 
     public function showAction() {
-        $page = new HomePage($this->router);
+        $page = new HomePage($this->routing);
         return new Response($page->render());
     }
 }

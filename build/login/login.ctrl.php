@@ -202,6 +202,22 @@ class LoginController extends RoxControllerBase
     public function logOut()
     {
         $this->model->logout();
-        $this->redirectAbsolute($this->router->url('main_page'));
+        $this->redirectAbsolute($this->router->url('start'));
+    }
+
+    public function close() {
+        $messageId = $this->route_vars['id'];
+        $loginMessage = new LoginMessage($messageId);
+        $loginMessage->acknowledgeMessage($this->model->getLoggedInMember());
+        $redirect = $_SERVER['HTTP_REFERER'];
+        if (empty($redirect)) {
+            $redirect = PVars::getObj('env')->baseuri . '/';
+        } else {
+            // don't redirect infinitely
+            if (strpos($redirect, '/close/') !== false) {
+                $redirect = PVars::getObj('env')->baseuri . '/';
+            }
+        }
+        $this->redirectAbsolute($redirect);
     }
 }

@@ -57,7 +57,7 @@ if ($boardName != 'no tags') {
    }
 
    if (isset($boards->IdSubscribe)) {
-	 	echo " <span class=\"button\"><a href=\"forums/subscriptions/unsubscribe/tag/",$boards->IdSubscribe,"/",$boards->IdKey,"\">",$words->getBuffered('ForumUnsubscribe'),"</a></span>",$words->flushBuffer();
+	 	echo " <span class=\"button\"><a href=\"forums/subscriptions/unsubscribe/tag/",$boards->IdTag,"\">",$words->getBuffered('ForumUnsubscribe'),"</a></span>",$words->flushBuffer();
 	}
 	else {
 	 	if (isset($boards->IdTag)) echo " <span class=\"button\"><a href=\"forums/subscribe/tag/",$boards->IdTag,"\">",$words->getBuffered('ForumSubscribe'),"</a></span>",$words->flushBuffer(); 
@@ -77,7 +77,7 @@ if ($boardName != 'no tags') {
 ?>
 <?php echo $words->flushBuffer(); ?>
 
-<h3><?php
+<!-- <h3><?php
 
 	$number = $boards->getTotalThreads(); 
 	if ($number == 0) {
@@ -90,6 +90,7 @@ if ($boardName != 'no tags') {
 	}
 
 ?></h3>
+-->
 
 <?php
 if ($User && empty($noForumNewTopicButton)) {

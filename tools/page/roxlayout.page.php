@@ -10,6 +10,9 @@ class PageWithRoxLayout extends PageWithHTML
     protected $meta_description ;
     protected $meta_keyword ;
     protected $meta_robots ;
+    protected $locator = null;
+    protected $yamlFileLocator = null;
+    protected $router = null;
     
     /*
      * Return a list of stylesheets to be included.
@@ -17,11 +20,7 @@ class PageWithRoxLayout extends PageWithHTML
     protected function getStylesheets()
     {
         $stylesheets = parent::getStylesheets();
-        // $stylesheets[] = 'styles/css/minimal/minimal.css?2';
-        $stylesheets[] = 'styles/css/bewelcome.css?2';
-        // $stylesheets[] = 'styles/css/bootstrap.css?1';
-        // $stylesheets[] = 'styles/css/minimal/screen/custom/select2/select2.min.css';
-        // $stylesheets[] = 'styles/css/select2-bootstrap.css';
+        $stylesheets[] = 'styles/css/bewelcome.css';
         if (PVars::getObj('development')->uncompress_css != 1) {
             $stylesheets = str_replace(".css", ".min.css", $stylesheets);
             return $stylesheets;
@@ -94,14 +93,15 @@ class PageWithRoxLayout extends PageWithHTML
     {
         $items = array();
 
-        if (APP_User::isBWLoggedIn()) {
+        $user = new APP_User();
+        if ($user->isBWLoggedIn()) {
             $username = isset($_SESSION['Username']) ? $_SESSION['Username'] : '';
             $items[] = array('profile', 'members/'.$username, $username, true);
         }
         $items[] = array('getanswers', 'about', 'GetAnswers');
         $items[] = array('findhosts', 'findmembers', 'FindHosts');
         $items[] = array('explore', 'explore', 'Explore');
-        if (APP_User::isBWLoggedIn()) {
+        if ($user->isBWLoggedIn()) {
             $items[] = array('messages', 'messages', 'Messages');
         }
         
@@ -142,8 +142,9 @@ class PageWithRoxLayout extends PageWithHTML
         $numberSpamToBeChecked = $model->getNumberSpamToBeChecked() ;
         $numberPersonsToAcceptInGroup = $model->getNumberPersonsToAcceptInGroup() ;
         $R = MOD_right::get();
-        
-        $logged_in = APP_User::IsBWLoggedIn("NeedMore,Pending");
+
+        $appUser = new APP_User();
+        $logged_in = $appUser->IsBWLoggedIn("NeedMore,Pending");
 
         /*if (class_exists('MOD_online')) {
             $who_is_online_count = MOD_online::get()->howManyMembersOnline();
@@ -205,17 +206,21 @@ class PageWithRoxLayout extends PageWithHTML
             }
         }
         // require TEMPLATE_DIR . 'shared/roxpage/topmenu.php';
-        $locator = new Symfony\Component\Config\FileLocator(array(SCRIPT_BASE));
-        $yamlFileLocator = new Symfony\Component\Routing\Loader\YamlFileLoader(
-            $locator
+        $this->locator = new Symfony\Component\Config\FileLocator(array(SCRIPT_BASE));
+        $this->yamlFileLocator = new Symfony\Component\Routing\Loader\YamlFileLoader(
+            $this->locator
         );
-        $router = new Symfony\Component\Routing\Router(
-            $yamlFileLocator,
+        $this->router = new Symfony\Component\Routing\Router(
+            $this->yamlFileLocator,
             SCRIPT_BASE.'routes.yml'
         );
 
-        $twigView = new \Rox\Framework\TwigView($router);
-        $twigView->setTemplate('navigation.html.twig', 'base');
+        $twigView = new \Rox\Framework\TwigView($this->router);
+        if ($logged_in) {
+            $twigView->setTemplate('menu.html.twig', 'base');
+        } else {
+            $twigView->setTemplate('loginbar.html.twig', 'base');
+        }
         $topmenu =  $twigView->render();
         echo $topmenu;
     }
@@ -293,7 +298,11 @@ class PageWithRoxLayout extends PageWithHTML
      */
     protected function footer()
     {
-        require SCRIPT_BASE . "build/rox/templates/footer.php";
+        $twigView = new \Rox\Framework\TwigView($this->router);
+        $twigView->setTemplate('footer.html.twig', 'base');
+        $footer = $twigView->render();
+        echo $footer;
+        // require SCRIPT_BASE . "build/rox/templates/footer.php";
     }
 
     protected function leftoverTranslationLinks()
@@ -412,12 +421,6 @@ class PageWithRoxLayout extends PageWithHTML
      */
     public function getFlashNotice($remove = false) {
         $flash = $this->getFlash('notice', $remove);
-        if (file_exists(SCRIPT_BASE . 'flash.txt')) {
-            if (!empty($flash)) {
-                $flash .= "<br /><br />";
-            }
-            $flash .= file_get_contents(SCRIPT_BASE . 'flash.txt');
-        }
         return $flash;
     }
 
@@ -435,4 +438,14 @@ class PageWithRoxLayout extends PageWithHTML
         return $this->getFlash('error', $remove);
     }
 
+    protected function _getLoginMessages() {
+        $model = new RoxModelBase();
+        $member = $model->getLoggedInMember();
+        if ($member) {
+            $loginMessage = new LoginMessage();
+            return $loginMessage->getLatestLoginMessages($member);
+        } else {
+            return false;
+        }
+    }
 }

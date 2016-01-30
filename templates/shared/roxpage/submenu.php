@@ -1,4 +1,4 @@
-<ul class="nav nav-pills nav-justifiedmedia submenu">
+<div class="p-l-0 m-b-1"><ul class="nav nav-pills">
 <?php
 $active_menu_item = $this->getSubmenuActiveItem();
 foreach ($this->getSubmenuItems() as $index => $item) {
@@ -6,16 +6,17 @@ foreach ($this->getSubmenuItems() as $index => $item) {
     $url = $item[1];
     $label = $item[2];
     if ($name === $active_menu_item) {
-        $attributes = ' class="active-bw"';
+        $classes = 'nav-link active';
     } else {
-        $attributes = ' class="disabled"';
+        $classes = 'nav-link';
     }
     
-    ?><li id="sub<?=$index ?>" <?=$attributes ?>>
-      <a style="cursor:pointer;" href="<?=$url ?>"><?=$label ?></a>
+    ?><li class="nav-item">
+      <a class="<?=$classes ?>" href="<?=$url ?>"><?=$label ?></a>
       <?=$words->flushBuffer(); ?>
     </li>
     <?php
     
 }?>
 </ul>
+</div>

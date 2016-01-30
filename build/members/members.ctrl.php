@@ -89,6 +89,7 @@ class MembersController extends RoxControllerBase
                             break;
                         case 'groups':
                             $my_groups = $member->getGroups();
+                            $params = new StdClass;
                             $params->strategy = new HalfPagePager('left');
                             $params->items = $my_groups;
                             $params->items_per_page = 10;
@@ -131,6 +132,17 @@ class MembersController extends RoxControllerBase
         switch (isset($request[0]) ? $request[0] : false) {
             case 'setlocation':
                 $page = new SetLocationPage();
+                $geo = new Geo($member_self->IdCity);
+                $vars = [];
+                if ($geo) {
+                    $vars['location'] = $geo->getFullName($_SESSION['lang']);
+                } else {
+                    $vars['location'] = '';
+                }
+                $vars['location-geoname-id'] = $member_self->IdCity;
+                $vars['location-latitude'] = $member_self->Latitude;
+                $vars['location-longitude'] = $member_self->Longitude;
+                $page->vars = $vars;
                 break;
             case 'mypreferences':
                 $page = new MyPreferencesPage();
@@ -342,6 +354,7 @@ class MembersController extends RoxControllerBase
                             break;
                         case 'groups':
                             $my_groups = $member->getGroups();
+                            $params = new stdClass();
                             $params->strategy = new HalfPagePager('left');
                             $params->items = $my_groups;
                             $params->items_per_page = 10;
@@ -406,7 +419,7 @@ class MembersController extends RoxControllerBase
         }
         $page->loggedInMember = $this->model->getLoggedInMember();
         $page->model = $this->model;
-        if ($page->member->Status == 'PassedAway') {
+        if ($page->member && $page->member->Status == 'PassedAway') {
             $page->passedAway = true;
         } else {
             $page->passedAway = false;
@@ -446,15 +459,10 @@ class MembersController extends RoxControllerBase
             }
 
             $errors = array();
-            // member id
-            if (empty($vars['id'])) {
-                $errors[] = 'GeoErrorProvideMemberId';
-                unset($vars['id']);
-            }
             // geonameid
-            if (empty($vars['geonameid'])) {
+            if (empty($vars['location-geoname-id'])) {
                 $errors[] = 'SignupErrorProvideLocation';
-                unset($vars['geonameid']);
+                unset($vars['location-geoname-id']);
             }
 
             if (count($errors) > 0) {
@@ -465,10 +473,12 @@ class MembersController extends RoxControllerBase
             }
 
             // set the location
-            $result = $this->model->setLocation($vars['id'],$vars['geonameid']);
+            $result = $this->model->setLocation($vars);
             $errors['Geonameid'] = 'Geoname not set';
             if (count($result['errors']) > 0) {
                 $mem_redirect->errors = $result['errors'];
+            } else {
+                $this->setFlashNotice('Successfully changed your location');
             }
             return false;
         }
@@ -512,9 +522,25 @@ class MembersController extends RoxControllerBase
             if (!$m->setPassword($vars['passwordnew'])){
                 $mem_redirect->problems = array(0 => 'ChangePasswordNotUpdated');
             }
+            $this->setFlashNotice($this->getWords()->get('PasswordSetFlashNotice'));
         }        
  
         return false;
+    }
+
+    public function commentCallback1($args, $action, $mem_redirect, $mem_resend)
+    {
+        return $this->commentCallback($args, $action, $mem_redirect, $mem_resend, 1);
+    }
+
+    public function commentCallback2($args, $action, $mem_redirect, $mem_resend)
+    {
+        return $this->commentCallback($args, $action, $mem_redirect, $mem_resend, 2);
+    }
+
+    public function commentCallback3($args, $action, $mem_redirect, $mem_resend)
+    {
+        return $this->commentCallback($args, $action, $mem_redirect, $mem_resend, 3);
     }
 
     /**
@@ -526,11 +552,11 @@ class MembersController extends RoxControllerBase
      * @param Object $mem_resend memory for resending the form
      * @return string relative request for redirect
      */
-    public function commentCallback($args, $action, $mem_redirect, $mem_resend)
+    public function commentCallback($args, $action, $mem_redirect, $mem_resend, $random)
     {
         $vars = $args->post;
         $request = $args->request;
-        $errors = $this->model->checkCommentForm($vars); // TODO: checkCommentForm still needs more finetuning
+        $errors = $this->model->checkCommentForm($vars, $random); // TODO: checkCommentForm still needs more finetuning
 
         if (count($errors) > 0) {
             // show form again
@@ -855,6 +881,7 @@ class MembersController extends RoxControllerBase
             $subject = $this->getWords()->get("ResetPasswordSubject");
             $body = $this->getWords()->get("ResetPasswordBody", $password, $member->Username);
             $member->sendMail($subject, $body);
+            $this->setFlashNotice($this->getWords()->get('ResetPasswordFlashNotice'));
             return $this->router->url('members_reset_password_finish', array(), false);
         } else {
             $mem_redirect->errors = array('ResetPasswordNoLogin');
@@ -871,19 +898,6 @@ class MembersController extends RoxControllerBase
     public function resetPassword()
     {
         $page = new ResetPasswordPage();
-        $page->model = $this->model;
-        return $page;
-    }
-
-    /**
-     * displays the reset your password page
-     *
-     * @access public
-     * @return ResetPasswordFinishPage
-     */
-    public function resetPasswordFinish()
-    {
-        $page = new ResetPasswordFinishPage();
         $page->model = $this->model;
         return $page;
     }

@@ -187,89 +187,63 @@ SQL
     /**
      * set the location of a member
      */
-    public function setLocation($IdMember,$geonameid = false)
+    public function setLocation($vars)
     {
+        // Address IdCity address must only consider Populated places (definition of cities), it also must consider the address checking process
+        $rank = 0; // Rank=0 means the main address, todo when we will deal with several addresses we will need to consider the other rank Values ;
+        $member = $this->getLoggedInMember();;
 
-        // Address IdCity address must only consider Populated palces (definition of cities), it also must consider the address checking process
-
-        $Rank=0 ; // Rank=0 means the main address, todo when we will deal with several addresses we will need to consider the other rank Values ;
-        $IdMember = (int)$IdMember;
-        $geonameid = (int)($geonameid);
-
+        $geonameid = 0;
+        $latitude = null;
+        $longitude = null;
         $errors = array();
-
-        if (empty($IdMember)) {
-            // name is not set:
-            $errors['Name'] = 'Name not set';
+        if (!isset($vars['location-geoname-id'])) {
+            $errors['Geonameid'] = 'Geoname not set';
+        } else {
+            $geonameid = $vars['location-geoname-id'];
         }
-        if (empty($geonameid)) {
-            // name is not set:
+
+        if (!isset($vars['location-latitude'])) {
+            $errors['Latitude'] = 'Latitude not set';
+        } else {
+            $latitude = $vars['location-latitude'];
+        }
+
+        if (!isset($vars['location-longitude'])) {
+            $errors['Longitude'] = 'Longitude not set';
+        } else {
+            $longitude = $vars['location-longitude'];
+        }
+
+        // Set members location even if the geoname id didn't change as exact location might have been updated
+        $result = $this->dao->query("
+            UPDATE  addresses
+            SET     IdCity = {$geonameid}
+            WHERE   IdMember = {$member->id} and Rank=" . $rank
+        );
+
+        if (!$result) {
             $errors['Geonameid'] = 'Geoname not set';
         }
 
-        // get Member's current Location
-        $result = $this->singleLookup(
-            "
-SELECT  a.IdCity
-FROM    addresses AS a
-WHERE   a.IdMember = '{$IdMember}'
-    AND a.rank = 0
-            "
-        );
-        if (!isset($result) || $result->IdCity != $geonameid) {
-            // Check Geo and maybe add location
-            $geomodel = new GeoModel();
-            if(!$geomodel->getDataById($geonameid)) {
-                // if the geonameid is not in our DB, let's add it
-                if (!$geomodel->addGeonameId($geonameid,'member_primary')) {
-                    $vars['errors'] = array('geoinserterror');
-                    return false;
-                }
-            } else {
-                // the geonameid is in our DB, so just update the counters
-                //get id for usagetype:
-                $usagetypeId = $geomodel->getUsagetypeId('member_primary')->id;
-                $update = $geomodel->updateUsageCounter($geonameid,$usagetypeId,'add');
-            }
-
-            $result = $this->singleLookup(
-                "
-UPDATE  addresses
-SET     IdCity = $geonameid
-WHERE   IdMember = $IdMember and Rank=".$Rank
+        if (empty($errors))
+        {
+            $member->IdCity = $geonameid;
+            $member->Latitude = $latitude;
+            $member->Longitude = $longitude;
+            $member->update();
+            $this->logWrite(
+                "The Member with the Id: ". $member->id
+                . " changed his location to Geo-Id ". $geonameid
+                . " and set exact position to (" . ($latitude <> null) ? $latitude : 'NULL'
+                . ", " . ($longitude <> null) ? $longitude : 'NULL' . ")",
+                "Members"
             );
-
-            // name is not set:
-            if (!empty($result)) $errors['Geonameid'] = 'Geoname not set';
-
-            $result = $this->singleLookup(
-                "
-UPDATE  members
-SET     IdCity = $geonameid
-WHERE   id = $IdMember
-                "
-            );
-            if (!empty($result)) $errors['Geonameid'] = 'Member IdCity not set';
-            else $this->logWrite ("The Member with the Id: ".$IdMember." changed his location to Geo-Id: ".$geonameid, "Members");
-
-            if (empty($errors) && ($m = $this->createEntity('Member')->findById($IdMember)))
-            {
-                // if a member with status NeedMore updates her/his profile, moving them back to pending
-                if ($m->Status == 'NeedMore')
-                {
-                    $m->Status = 'Pending';
-                    $m->update();
-                }
-            }
-
-            return array(
-                'errors' => $errors,
-                'IdMember' => $result
-                );
-        } else {
-            // geonameid hasn't changed
-            return false;
         }
+
+        return array(
+            'errors' => $errors,
+        );
     }
 
 
@@ -283,7 +257,7 @@ WHERE   id = $IdMember
      * Nota no need to test if the profile exist in the language, since this setting is used for the sub-headers of the page (profile content is something else than headers)
      */
     public function set_profile_language($langcode){
-        $langcode = mysql_real_escape_string($langcode);
+        $langcode = $this->dao->escape($langcode);
         if (is_numeric($langcode)) {
             $ss=  "
 SELECT SQL_CACHE
@@ -472,12 +446,63 @@ WHERE
     }
 
 
+    public function _checkSimilarity($comments, $weight = 95) {
+        $similar = 0;
+        $count = count($comments);
+        for($i = 0;$i < $count - 1; $i++) {
+            for ($j = $i + 1; $j < $count; $j++) {
+                similar_text(
+                    $comments[$i]->TextFree, $comments[$j]->TextFree, $percent
+                );
+                if ($percent > $weight) {
+                    $similar++;
+                }
+            }
+        }
+        $result = ($similar == $count * ($count -1));
+        return $result;
+    }
 
-    // checkCommentForm - NOT FINISHED YET !
-    public function checkCommentForm(&$vars)
+    private function _checkCommentQuality($memberId, $duration, $count) {
+        $result = false;
+        // Check number of comments written in the last two minutes
+        $query = "
+            SELECT
+                COUNT(*) as cnt
+            FROM
+                comments c
+            WHERE
+                c.IdFromMember = " . $memberId . "
+                AND TIMEDIFF(NOW(), created) < '" . $duration . "'
+            ";
+        $s = $this->dao->query($query);
+        $row = $s->fetch(PDB::FETCH_OBJ);
+        $cnt = $row->cnt;
+        if ($cnt >= $count) {
+            // Okay limit was hit, check for comment quality
+            // Get all comments written during the given duration
+            $query = "
+                SELECT
+                    c.TextFree,
+                    c.TextWhere
+                FROM
+                    comments c
+                WHERE
+                    c.IdFromMember = " . $memberId . "
+                    AND TIMEDIFF(NOW(), created) < '" . $duration . "'
+                ";
+            $comments = $this->bulkLookup($query);
+
+            $result = $this->_checkSimilarity($comments);
+        }
+        return $result;
+    }
+
+    // checkCommentForm
+    public function checkCommentForm(&$vars, $random)
     {
         $errors = array();
-
+        $member = $this->getLoggedInMember();
         $syshcvol = PVars::getObj('syshcvol');
         $max = count($syshcvol->LenghtComments);
         $tt = $syshcvol->LenghtComments;
@@ -499,7 +524,15 @@ WHERE
         if (!isset ($vars["CommentGuidelines"])) {
             $errors[] = 'CommentMustAcceptGuidelines';
         }
-        return $errors;       
+
+        $check1 = $this->_checkCommentQuality($member->id, '00:02:00', 1);
+        $check2 = $this->_checkCommentQuality($member->id, '00:20:00', 5);
+        $check3 = $this->_checkCommentQuality($member->id, '06:00:00', 25);
+
+        if ($check1 || $check2 || $check3) {
+            $errors[] = 'CommentSomethingWentWrong';
+        }
+        return $errors;
     }
 
     public function addComment($TCom,&$vars)
@@ -1416,8 +1449,8 @@ ORDER BY
         }
 
         $member = $this->createEntity('Member', $memberId);
-
-        if (!$this->hasAvatar($memberId, $suffix) || (!$member->publicProfile && !$this->getLoggedInMember())) {
+        $browseable = $member->isBrowsable();
+        if ((!$browseable) || !$this->hasAvatar($memberId, $suffix) || (!$member->publicProfile && !$this->getLoggedInMember())) {
             header('Content-type: image/png');
             header ("cache-control: must-revalidate");
             $offset = 48 * 60 * 60;
@@ -1825,6 +1858,23 @@ VALUES
     }
 
     /**
+     * Helper function for removeMembers
+     *
+     * Deletes the profile picture files
+     */
+    private function _removeProfilePictures(Member $member)
+    {
+        $memberPath = $this->avatarDir->dirName() . '/' . $member->id;
+        $suffixes = array("_xs", "_30_30", "_150", "_200", "_500", "_original", "");
+        foreach($suffixes as $suffix) {
+            $filename =  $memberPath . $suffix;
+            if (file_exists($filename)) {
+                unlink($filename);
+            }
+        }
+    }
+
+    /**
      * This functions is called daily by a cron job to ensure that data of members that asked to leave a year ago
      * are removed from the database.
      *
@@ -1876,6 +1926,7 @@ VALUES
                 $member = $this->_cleanupMembersTable($member, $remainingColumns, $tableDescription);
                 $member = $this->_cleanupMemberLanguages($member);
                 $member = $this->_updateUserTable($member, $newUsername);
+                $this->_removeProfilePictures($member);
                 $member->update();
                 MOD_log::get()->write("Removed private data for " . $username, "Data Retention");
             }

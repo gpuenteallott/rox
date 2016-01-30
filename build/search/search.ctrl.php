@@ -139,7 +139,7 @@ class SearchController extends RoxControllerBase
         $type = $this->route_vars['type'];
         $location = $this->args_vars->get['name'];
         $callback = $this->args_vars->get['callback'];
-        $locations = $this->model->suggestLocations($location, $type, $callback);
+        $locations = $this->model->suggestLocations($location, $type);
         header('Content-type: application/javascript, charset=utf-8');
         $javascript = $callback . '(' . json_encode($locations) . ')';
         echo $javascript . "\n";
@@ -147,15 +147,16 @@ class SearchController extends RoxControllerBase
     }
 
     /**
-     * Returns a JSON encoded list of possible locations based on the provided location
+     * Returns a JSON encoded list of possible members starting with provided text
      */
     public function searchMemberUsernames()
     {
-        $username = $this->args_vars->get['username'];
+        $username = $this->args_vars->get['q'];
         $callback = $this->args_vars->get['callback'];
-        $usernames = $this->model->suggestUsernames($username, $callback);
+        $usernames = $this->model->suggestUsernames($username);
         header('Content-type: application/javascript, charset=utf-8');
-        $javascript = $callback . '(' . json_encode($usernames) . ')';
+        // $javascript = $callback . '(' . json_encode($usernames) . ')';
+        $javascript = json_encode($usernames);
         echo $javascript . "\n";
         exit;
     }
